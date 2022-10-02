@@ -1,0 +1,216 @@
+<!Doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport"
+        content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,user-scalable=no">
+    <title>Easy Send</title>
+    <link rel="stylesheet" type="text/css" href="./static/layui/css/layui.css">
+    <link rel="stylesheet" type="text/css" href="./static/main.css">
+    <script src="./static/jquery2.2.4.min.js"></script>
+    <script src="./static/layui/layui.js"></script>
+    <script src="./static/localforage.js"></script>
+</head>
+
+<body>
+        <div class="layui-tab layui-tab-brief" lay-filter="tab" style="margin:0px;">
+            <ul class="layui-tab-title">
+                <li class="layui-this" lay-id="file">文件转存</li>
+                <li lay-id="text">文字转存</li>
+                <li lay-id="get">数据提取</li>
+                <li lay-id="room">文件直传</li>
+                <li style="float:right;" id="change_web_url">
+                    <span class="layui-icon layui-icon-engine"></span>
+                </li>
+            </ul>
+            
+            <div class="layui-tab-content" style="height: 330px;" id="main_box">
+                <div class="layui-tab-item layui-show">
+                    <div class="layui-upload-drag layui-anim layui-anim-upbit dragbox" id="upload"
+                        data-anim="layui-anim-down">
+                        <div class="info">
+                            <i class="layui-icon layui-anim layui-anim-upbit" data-anim="layui-anim-down"></i>
+                            <p>点击上传，或将文件拖拽到此处</p>
+                            <div id="upload-size-info">Loading…</div>
+                            <div class="layui-hide info" id="upload-progress">
+                                <div class="layui-progress layui-progress-big" lay-showpercent="yes"
+                                    lay-filter="progress">
+                                    <div class="layui-progress-bar" lay-percent=""></div>
+                                </div>
+                            </div>
+                        </div>
+                        <p id="local-info"></p>
+                    </div>
+                    <div class="layui-hide info" id="upload-info">
+                        <div id="file-info" class="info layui-hide">
+                            <img id="file-qrcode" class="qrcode" src="./static/placeholder.svg"><br>
+                            <span class="code" id="file-code"></span><br>
+                            <span>剩余查看次数:</span><span style="color: #FF5722;" id="file-leave-times"></span><br>
+                            <span>到期时间:</span><span style="color: #FF5722;" id="file-leave-tillday"></span><br><br>
+                            <button type="button" class="layui-btn btn"
+                                onclick="FileContinue()">继续上传</button>
+                        </div>
+                        <div id="reload-tip" class="layui-hide">
+                            <button type="button" class="layui-btn btn " id="reload">重新上传</button>
+                        </div>
+                        <button type="button" class="layui-btn btn " id="upload-Action">开始上传</button>
+                    </div>
+                </div>
+                <div class="layui-tab-item">
+                    <style>
+                        .textarea::-webkit-scrollbar {
+                            /*滚动条整体样式*/
+                            width: 8px;
+                            /*高宽分别对应横竖滚动条的尺寸*/
+                            height: 1px;
+                        }
+
+                        .textarea::-webkit-scrollbar-thumb {
+                            /*滚动条里面小方块*/
+                            border-radius: 8px;
+                            background-color: #02ab9c;
+                            background-image: -webkit-linear-gradient(45deg,
+                                    #01cab7 10%,
+                                    transparent 10%,
+                                    transparent 30%,
+                                    #01cab7 30%,
+
+                                    #01cab7 50%,
+                                    transparent 50%,
+                                    transparent 70%,
+                                    #01cab7 70%,
+
+                                    #01cab7 90%,
+                                    transparent 90%,
+                                    transparent 100%,
+                                    #01cab7 100%,
+                                    transparent);
+                        }
+                    </style>
+
+                    <form class="layui-form formbox" action="">
+                        <div class="layui-form-item layui-form-text layui-anim layui-anim-upbit" id="text">
+                            <textarea name="text" placeholder="请输入内容" class="layui-textarea textarea" lay-verify="text"
+                                data-anim="layui-anim-down" id="text-textarea"></textarea>
+                        </div>
+                        <div class="info" id="text-btn">
+                            <button type="submit" class="layui-btn btn layui-anim layui-anim-upbit " lay-submit=""
+                                lay-filter="save" data-anim="layui-anim-down">立即提交</button>
+                        </div>
+                        <div id="text-info" class="info layui-hide">
+                            <img id="text-qrcode" class="qrcode" src="./static/placeholder.svg"><br>
+                            <span class="code" id="text-code"></span><br>
+                            <span>剩余查看次数:</span><span style="color: #FF5722;" id="text-leave-times"></span><br>
+                            <span>到期时间:</span><span style="color: #FF5722;" id="text-leave-tillday"></span><br><br>
+                            <button type="button" class="layui-btn btn "
+                                onclick="TextContinue()">继续上传</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="layui-tab-item">
+                    <div id="input">
+                        <form class="layui-form getbox">
+                            <div class="layui-form-item layui-anim layui-anim-upbit">
+                                <input type="text" name="key" lay-verify="get" pattern="/^[a-zA-Z0-9]{4}$/"
+                                    autocomplete="off" placeholder="请输入4位提取码" id="get-input" value=""
+                                    data-anim="layui-anim-down" class="layui-input get"
+                                    onKeypress="javascript:if(event.keyCode == 32)event.returnValue = false;" required>
+                            </div>
+                            <div class="info">
+                                <button type="submit" class="layui-btn btn layui-anim layui-anim-upbit " lay-submit=""
+                                    lay-filter="getbtn" data-anim="layui-anim-down">立即提取</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div id="result" class="layui-hide formbox">
+                        <div class="layui-form-item layui-form-text layui-anim layui-anim-upbit layui-hide"
+                            id="result-text">
+                            <textarea class="layui-textarea textarea" data-anim="layui-anim-down"
+                                id="result-value"></textarea>
+                        </div>
+                        <div class="layui-form-item layui-anim layui-anim-upbit layui-hide" id="result-file">
+                            <input type="text" value="" autocomplete="off" id="result-url" class="layui-input get"
+                                data-anim="layui-anim-down">
+                        </div>
+                        <div class="info layui-hide" id="result-download-btn">
+                            <a id="result-download" href="" target="_blank">
+                                <button type="button" class="layui-btn btn layui-anim layui-anim-upbit "
+                                    data-anim="layui-anim-down">立即下载</button>
+                            </a>
+                        </div>
+                        <div class="info" id="result-info" class="layui-hide">
+                            <span>剩余查看次数:</span><span style="color: #FF5722;" id="get-leave-times"></span><br>
+                            <span>到期时间:</span><span style="color: #FF5722;" id="get-leave-tillday"></span><br><br>
+                            <button type="button" class="layui-btn btn" onclick="GetContinue()">继续提取</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-tab-item">
+                    <div id="room_input">
+                        <form class="layui-form roombox">
+                            <div class="layui-form-item layui-anim layui-anim-upbit">
+                                <input type="text" name="roomid" lay-verify="roomid" autocomplete="off"
+                                    placeholder="请输入房间号" id="roomid_input" data-anim="layui-anim-down"
+                                    class="layui-input get"
+                                    onKeypress="javascript:if(event.keyCode == 32)event.returnValue = false;" required>
+                            </div>
+                            <div class="layui-form-item layui-anim layui-anim-upbit">
+                                <input type="text" name="roompassword" lay-verify="roompassword" autocomplete="off"
+                                    placeholder="请输入房间密码" id="roompassword_input" data-anim="layui-anim-down"
+                                    class="layui-input get"
+                                    onKeypress="javascript:if(event.keyCode == 32)event.returnValue = false;" required>
+                            </div>
+                            <div class="info">
+                                <button type="submit" class="layui-btn btn layui-anim layui-anim-upbit" lay-submit=""
+                                    lay-filter="roombtn" data-anim="layui-anim-down">立即加入</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div id="room_info" style="text-align:center" class="layui-hide">
+                        <img src="./static/placeholder.svg" class="qrcode" id="room_qrcode">
+                        <p>房间号：<span id="room_roomid"></span></p>
+                        <p>房间状态：<span id="room_state"></span></p>
+                        <p>我的身份：<span id="room_type"></span></p>
+                    </div>
+                    <div id="room_choose" class="layui-hide formbox" style="text-align:center">
+                        <button type="button" class="layui-btn btn layui-anim layui-anim-upbit" lay-submit=""
+                            id="room_choose_send" data-anim="layui-anim-down">发送</button><br>
+                        <button type="button" class="layui-btn btn layui-anim layui-anim-upbit" lay-submit=""
+                            id="room_choose_receive" data-anim="layui-anim-down">接收</button>
+                    </div>
+                    <div id="room_send" class="layui-hide formbox" style="text-align:center">
+                        <div id="room_send_connected" class="layui-hide">
+                            <button type="button" class="layui-btn" id="room_send_button">选择上传文件</button>
+                            <input type="file" class="layui-hide" id="room_send_file">
+                            <div id="room_send_file_info" class="layui-hide">
+                                <p>文件大小:<span id="room_send_file_size"></span>MB</p>
+                                <p>文件名称:<span id="room_send_file_name"></span></p>
+                                <button type="button" onclick="room_upload(0)" class="layui-btn"
+                                    id="room_send_button_confirm">确定发送</button>
+                            </div>
+                        </div>
+                        <div id="room_send_sending" class="layui-hide">
+                            <div class="layui-progress layui-progress-big" lay-showpercent="yes"
+                                lay-filter="room_progress">
+                                <div class="layui-progress-bar" lay-percent=""></div>
+                            </div>
+                        </div>
+                        <div id="room_send_finish" class="layui-hide">
+                            <button type="button" class="layui-btn" id="room_send_button_continue">继续发送</button>
+                        </div>
+                    </div>
+                    <div id="room_receive" class="layui-hide formbox">
+                        <div id="room_receive_connected"></div>
+                        <div id="room_receive_sending"></div>
+                        <div id="room_receive_finish" class="layui-hide">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <script src="./static/main.js"></script>
+</body>
+
+</html>
